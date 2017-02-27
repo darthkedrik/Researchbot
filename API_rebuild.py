@@ -5,30 +5,45 @@ import codecs
 import time
 
 ### Reddit APIs require a unique user_agent. Update version info as needed.
-user_agent = "Anonymity Data Collector 0.05"
+user_agent = "Anonymity Data Collector 1.00"
 
 r = praw.Reddit(user_agent = user_agent)
 
-### Change this to 'all'? If possible, this will gather widest subset of data.
+### Need to compile these into a .txt, one for reddit posts, one for reddit
+### titles, and one each for 4chan.
+### 4chan doesn't require titles. Write escape to make sure Subject = None
+### is instead replaced with the first five words of the selfpost text to
+### avoid duplication and avoid skipping duplicate post titles.
+
+### Readers of various texts. I tried to contain as much of the API
+### differences within these two differences. reddit_reader uses reddit
+### API, chan_reader uses 4chan API.
+### The rest of the code should be about as free of API-specific text
+### as can be made possible, minus title checking.
 
 
-### Need to compile these into a .txt, one for reddit posts, one for reddit titles, and one each for 4chan.
-### 4chan doesn't require titles. Write escape to make sure Subject = None is instead replaced with the first five words of the selfpost text to avoid duplication and avoid skipping duplicate post titles.
+'''
 
-### Readers of various texts. I tried to contain as much of the API differences within these two differences. reddit_reader uses reddit API, chan_reader uses 4chan API.
-### The rest of the code should be about as free of API-specific text as can be made possible, minus title checking.
+    This code is old, in need of restructuring. Since the library csv
+    exists, this should likely be an output to a csv file for ease of
+    scanning and reading. The newer version of the code is present in
+    Data_scraper.py. Consolidate these into less files and make sure
+    it is all working.
+
 
 def reddit_reader(submission, text):
     ### flattens out the comment tree using praw.helpers
     flat_tree = praw.helpers.flatten_tree(submission.comments)
-    ### writes the submission title surrounded by ***, and the selftext of the post surrounded with ...
+    ### writes the submission title surrounded by ***, and the selftext
+    ### of the post surrounded with ...
     text.write('***')
     text.write(submission.title)
     text.write('***')
     text.write('   ===   ')
     text.write(submission.selftext)
     text.write('   ===   ')
-    ### Writes each comment to the file. try is necessary because of "more comments" loaders.
+    ### Writes each comment to the file. try is necessary because of
+    ### "more comments" loaders.
     for comment in flat_tree:
         try:
             text.write('   ---   ')
@@ -37,9 +52,11 @@ def reddit_reader(submission, text):
         except AttributeError:
             continue
     return
-    
+
 def chan_reader(thread, text, title):
-    ### 4chan API doesn't require flattening of a comment tree. thread.topic is the subject post, while thread.replies is a list of all replies to the topic. 
+    ### 4chan API doesn't require flattening of a comment tree.
+    ### thread.topic is the subject post, while thread.replies is a
+    ### list of all replies to the topic.
     ### thread contains topic, subject, and replies.
     text.write('***\n')
     text.write(title)
@@ -52,6 +69,8 @@ def chan_reader(thread, text, title):
         text.write(reply.text_comment)
         text.write('   ---   ')
     return
+
+'''
 
 def reddit_spybot(sub, tf, cf):
     submissions = r.get_subreddit(sub).get_hot(limit=100)
@@ -82,7 +101,7 @@ def chan_checker(thread, title_file):
                     return False
                 else:
                     return title_str
-    
+
 def chan_spybot(board, tf, cf):
     threads = board.get_all_thread_ids()
     for thread in threads:
@@ -100,10 +119,10 @@ def chan_spybot(board, tf, cf):
 
 r_comments = ['reddit_comments_askreddit.txt','reddit_comments_aww.txt','reddit_comments_books.txt','reddit_comments_fitness.txt','reddit_comments_food.txt',
 'reddit_comments_funny.txt','reddit_comments_gaming.txt','reddit_comments_history.txt','reddit_comments_music.txt','reddit_comments_photography.txt',
-'reddit_comments_science.txt','reddit_comments_tech.txt','reddit_comments_4chan.txt', 'reddit_comments_wtf.txt', 'reddit_comments_spacedicks.txt', 
+'reddit_comments_science.txt','reddit_comments_tech.txt','reddit_comments_4chan.txt', 'reddit_comments_wtf.txt', 'reddit_comments_spacedicks.txt',
 'reddit_comments_til.txt', 'reddit_comments_news.txt', 'reddit_comments_jokes.txt', 'reddit_comments_eli5.txt']
 r_titles = ['reddit_titles_askreddit.txt','reddit_titles_aww.txt','reddit_titles_books.txt','reddit_titles_fitness.txt','reddit_titles_food.txt','reddit_titles_funny.txt',
-'reddit_titles_gaming.txt','reddit_titles_history.txt','reddit_titles_music.txt','reddit_titles_photography.txt','reddit_titles_science.txt','reddit_titles_tech.txt', 
+'reddit_titles_gaming.txt','reddit_titles_history.txt','reddit_titles_music.txt','reddit_titles_photography.txt','reddit_titles_science.txt','reddit_titles_tech.txt',
 'reddit_titles_4chan.txt', 'reddit_titles_wtf.txt', 'reddit_titles_spacedicks.txt', 'reddit_titles_til.txt', 'reddit_titles_news.txt', 'reddit_titles_jokes.txt', 'reddit_titles_eli5.txt']
 r_subs = ['askreddit','aww','books','fitness','food','funny','gaming','history','music','photography','science','technology', '4chan', 'wtf', 'spacedicks', 'todayilearned', 'news', 'jokes', 'explainlikeimfive']
 
@@ -125,12 +144,10 @@ for sub in r_subs:
             time.sleep(5)
             continue
         break
-            
+
 
 for board in c_boards:
     bname = basc_py4chan.Board(board)
     title_file = c_titles[c_boards.index(board)]
     comm_file = c_comments[c_boards.index(board)]
     chan_spybot(bname, title_file, comm_file)
-
-        

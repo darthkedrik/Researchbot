@@ -1,22 +1,22 @@
 #!/usr/bin/python
-# coding: utf-8 
+# coding: utf-8
 '''
 Created on July 04, 2013
 @author: C.J. Hutto
 
 Citation Information
 
-If you use any of the VADER sentiment analysis tools 
-(VADER sentiment lexicon or Python code for rule-based sentiment 
-analysis engine) in your work or research, please cite the paper. 
+If you use any of the VADER sentiment analysis tools
+(VADER sentiment lexicon or Python code for rule-based sentiment
+analysis engine) in your work or research, please cite the paper.
 For example:
 
-  Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based Model for 
-  Sentiment Analysis of Social Media Text. Eighth International Conference on 
+  Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based Model for
+  Sentiment Analysis of Social Media Text. Eighth International Conference on
   Weblogs and Social Media (ICWSM-14). Ann Arbor, MI, June 2014.
 '''
 
-import os, math, re, sys, fnmatch, string 
+import os, math, re, sys, fnmatch, string
 import csv
 import nltk
 import random
@@ -26,7 +26,7 @@ sys.setdefaultencoding('utf-8')
 
 def make_lex_dict(f):
     return dict(map(lambda (w, m): (w, float(m)), [wmsr.strip().split('\t')[0:2] for wmsr in open(f) ]))
-    
+
 f = 'vader_sentiment_lexicon.txt' # empirically derived valence ratings for words, emoticons, slang, swear words, acronyms/initialisms
 try:
     WORD_VALENCE_DICT = make_lex_dict(f)
@@ -143,7 +143,7 @@ def sentiment(text):
     # get rid of empty items or single letter "words" like 'a' and 'I' from wordsOnly
     for word in wordsOnly:
         if len(word) <= 1:
-            wordsOnly.remove(word)    
+            wordsOnly.remove(word)
     # now remove adjacent & redundant punctuation from [wordsAndEmoticons] while keeping emoticons and contractions
 
     for word in wordsOnly:
@@ -155,7 +155,7 @@ def sentiment(text):
                 wordsAndEmoticons.remove(pword)
                 wordsAndEmoticons.insert(i, word)
                 x1 = wordsAndEmoticons.count(pword)
-            
+
             wordp = word + p
             x2 = wordsAndEmoticons.count(wordp)
             while x2 > 0:
@@ -168,13 +168,13 @@ def sentiment(text):
     for word in wordsAndEmoticons:
         if len(word) <= 1:
             wordsAndEmoticons.remove(word)
-    
+
     # remove stopwords from [wordsAndEmoticons]
     #stopwords = [str(word).strip() for word in open('stopwords.txt')]
     #for word in wordsAndEmoticons:
     #    if word in stopwords:
     #        wordsAndEmoticons.remove(word)
-    
+
     # check for negation
 
     isCap_diff = isALLCAP_differential(wordsAndEmoticons)
@@ -191,9 +191,9 @@ def sentiment(text):
         if item_lowercase in WORD_VALENCE_DICT:
             #get the sentiment valence
             v = float(WORD_VALENCE_DICT[item_lowercase])
-            
+
             #check if sentiment laden word is in ALLCAPS (while others aren't)
-            
+
             if item.isupper() and isCap_diff:
                 if v > 0: v += c_INCR
                 else: v -= c_INCR
@@ -209,8 +209,8 @@ def sentiment(text):
                 if s2 != 0: s2 = s2*0.95
                 v = v+s2
                 # check for special use of 'never' as valence modifier instead of negation
-                if wordsAndEmoticons[i-2] == "never" and (wordsAndEmoticons[i-1] == "so" or wordsAndEmoticons[i-1] == "this"): 
-                    v = v*1.5                    
+                if wordsAndEmoticons[i-2] == "never" and (wordsAndEmoticons[i-1] == "so" or wordsAndEmoticons[i-1] == "this"):
+                    v = v*1.5
                 # otherwise, check for negation/nullification
                 elif negated([wordsAndEmoticons[i-2]]): v = v*n_scalar
             if i > 2 and wordsAndEmoticons[i-3].lower() not in WORD_VALENCE_DICT:
@@ -224,12 +224,12 @@ def sentiment(text):
                     v = v*1.25
                 # otherwise, check for negation/nullification
                 elif negated([wordsAndEmoticons[i-3]]): v = v*n_scalar
-                
+
 
                 # future work: consider other sentiment-laden idioms
-                #other_idioms = {"back handed": -2, "blow smoke": -2, "blowing smoke": -2, "upper hand": 1, "break a leg": 2, 
+                #other_idioms = {"back handed": -2, "blow smoke": -2, "blowing smoke": -2, "upper hand": 1, "break a leg": 2,
                 #                "cooking with gas": 2, "in the black": 2, "in the red": -2, "on the ball": 2,"under the weather": -2}
-            
+
                 onezero = u"{} {}".format(wordsAndEmoticons[i-1], wordsAndEmoticons[i])
                 twoonezero = u"{} {} {}".format(wordsAndEmoticons[i-2], wordsAndEmoticons[i-1], wordsAndEmoticons[i])
                 twoone = u"{} {}".format(wordsAndEmoticons[i-2], wordsAndEmoticons[i-1])
@@ -253,11 +253,11 @@ def sentiment(text):
                     zeroonetwo = u"{} {}".format(wordsAndEmoticons[i], wordsAndEmoticons[i+1], wordsAndEmoticons[i+2])
                     if zeroonetwo in SPECIAL_CASE_IDIOMS:
                         v = SPECIAL_CASE_IDIOMS[zeroonetwo]
-                
+
                 # check for booster/dampener bi-grams such as 'sort of' or 'kind of'
                 if threetwo in BOOSTER_DICT or twoone in BOOSTER_DICT:
                     v = v+B_DECR
-            
+
             # check for negation case using "least"
             if i > 1 and wordsAndEmoticons[i-1].lower() not in WORD_VALENCE_DICT \
                 and wordsAndEmoticons[i-1].lower() == "least":
@@ -266,32 +266,32 @@ def sentiment(text):
             elif i > 0 and wordsAndEmoticons[i-1].lower() not in WORD_VALENCE_DICT \
                 and wordsAndEmoticons[i-1].lower() == "least":
                 v = v*n_scalar
-        sentiments.append(v) 
-            
+        sentiments.append(v)
+
     # check for modification in sentiment due to contrastive conjunction 'but'
     if 'but' in wordsAndEmoticons or 'BUT' in wordsAndEmoticons:
         try: bi = wordsAndEmoticons.index('but')
         except: bi = wordsAndEmoticons.index('BUT')
         for s in sentiments:
             si = sentiments.index(s)
-            if si < bi: 
+            if si < bi:
                 sentiments.pop(si)
                 sentiments.insert(si, s*0.5)
-            elif si > bi: 
+            elif si > bi:
                 sentiments.pop(si)
-                sentiments.insert(si, s*1.5) 
-                
-    if sentiments:                      
+                sentiments.insert(si, s*1.5)
+
+    if sentiments:
         sum_s = float(sum(sentiments))
         #print sentiments, sum_s
-        
+
         # check for added emphasis resulting from exclamation points (up to 4 of them)
         ep_count = text.count("!")
         if ep_count > 4: ep_count = 4
         ep_amplifier = ep_count*0.292 #(empirically derived mean sentiment intensity rating increase for exclamation points)
         if sum_s > 0:  sum_s += ep_amplifier
         elif  sum_s < 0: sum_s -= ep_amplifier
-        
+
         # check for added emphasis resulting from question marks (2 or 3+)
         qm_count = text.count("?")
         qm_amplifier = 0
@@ -302,7 +302,7 @@ def sentiment(text):
             elif  sum_s < 0: sum_s -= qm_amplifier
 
         compound = normalize(sum_s)
-        
+
         # want separate positive versus negative sentiment scores
         pos_sum = 0.0
         neg_sum = 0.0
@@ -314,19 +314,19 @@ def sentiment(text):
                 neg_sum += (float(sentiment_score) -1) # when used with math.fabs(), compensates for neutrals
             if sentiment_score == 0:
                 neu_count += 1
-        
+
         if pos_sum > math.fabs(neg_sum): pos_sum += (ep_amplifier+qm_amplifier)
         elif pos_sum < math.fabs(neg_sum): neg_sum -= (ep_amplifier+qm_amplifier)
-        
+
         total = pos_sum + math.fabs(neg_sum) + neu_count
         pos = math.fabs(pos_sum / total)
         neg = math.fabs(neg_sum / total)
         neu = math.fabs(neu_count / total)
-        
+
     else:
         compound = 0.0; pos = 0.0; neg = 0.0; neu = 0.0
-        
-    s = {"neg" : round(neg, 3), 
+
+    s = {"neg" : round(neg, 3),
          "neu" : round(neu, 3),
          "pos" : round(pos, 3),
          "compound" : round(compound, 4)}
@@ -357,11 +357,11 @@ if __name__ == '__main__':
     paragraph = "It was one of the worst movies I've seen, despite good reviews. \
     Unbelievably bad acting!! Poor direction. VERY poor production. \
     The movie was bad. Very bad movie. VERY bad movie. VERY BAD movie. VERY BAD movie!"
-    
+
     from nltk import tokenize
     lines_list = tokenize.sent_tokenize(paragraph)
     sentences.extend(lines_list)
-    
+
     tricky_sentences = [
                         "Most automated sentiment analysis tools are shit.",
                         "VADER sentiment analysis is the shit.",
@@ -376,7 +376,7 @@ if __name__ == '__main__':
                         "This movie doesn't care about cleverness, wit or any other kind of intelligent humor.",
                         "Those who find ugly meanings in beautiful things are corrupt without being charming.",
                         "There are slow and repetitive parts, BUT it has just enough spice to keep it interesting.",
-                        "The script is not fantastic, but the acting is decent and the cinematography is EXCELLENT!", 
+                        "The script is not fantastic, but the acting is decent and the cinematography is EXCELLENT!",
                         "Roger Dodger is one of the most compelling variations on this theme.",
                         "Roger Dodger is one of the least compelling variations on this theme.",
                         "Roger Dodger is at least compelling as a variation on the theme.",
@@ -391,11 +391,11 @@ if __name__ == '__main__':
         print sentence
         ss = sentiment(sentence)
         print "\t" + str(ss)
-        
-    
+
+
     print "\n\n Done!"'''
-    
-    
+
+
     reddit_subs = ['spacedicks','askreddit','aww','books','fitness','food','funny','gaming','history','music','photography','science','technology', '4chan', 'wtf', 'todayilearned', 'news', 'jokes', 'explainlikeimfive']
     chan_boards = ['<Board /b/>','<Board /c/>','<Board /ck/>','<Board /fit/>','<Board /g/>','<Board /his/>','<Board /mu/>','<Board /p/>','<Board /sci/>','<Board /v/>', '<Board /x/>', '<Board /vg/>', '<Board /vr/>', '<Board /sp/>', '<Board /diy/>', '<Board /adv/>']
     reddit_shock_subs = ['spacedicks', 'wtf']
@@ -415,7 +415,7 @@ if __name__ == '__main__':
 
     def sentences_finder(sublist, filehandle):
         tok = nltk.data.load('tokenizers/punkt/english.pickle')
-        
+
         with open('scrubbed_corpus.csv', 'r') as fh:
             filename = filehandle + '.csv'
             reader = csv.reader(fh)
@@ -430,7 +430,7 @@ if __name__ == '__main__':
                         sentences = tok.tokenize(textDecoded)
                         with open(filename, 'a+') as fh:
                             writer = csv.writer(fh)
-            
+
                             for s in sentences:
                                 ss = sentiment(s)
                                 writer.writerow(ss.values())
@@ -438,7 +438,7 @@ if __name__ == '__main__':
                         rowctr += random.randrange(10)
                 if datactr >= 5000:
                     break
-    
+
     sentences_finder(reddit_subs, 'reddit_sentiments')
     sentences_finder(chan_boards, '4chan_sentiments')
     sentences_finder(reddit_shock_subs, 'shock_sentiments')
@@ -446,5 +446,3 @@ if __name__ == '__main__':
     sentences_finder(reddit_no_shock, 'noshock_sentiments')
     sentences_finder(chan_no_b, 'nob_sentiments')
     sentences_finder(chan_only_b, 'b_sentiments')
-
-    
