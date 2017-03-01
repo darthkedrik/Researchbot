@@ -7,17 +7,17 @@ def spybot(board_list):
     # data to 4chan datafile
     # Print which board we're running on while working
     for board in board_list:
-        print ("Currently pulling data from", board._board_name)
+        print("Currently pulling data from", board._board_name)
         all_threads = board.get_all_threads(expand=True)
         id_file = DATA_DIR + board._board_name + "_ids.csv"
 
         cur_ids = ids_reader(id_file)
 
         for thread in all_threads:
-            for post in thread:
+            for post in thread.posts:
                 if post.post_id in cur_ids:
                     continue
-                else:
+                elif post.post_id not in cur_ids:
                     ids_writer(id_file, post.post_id)
                     post_data = [board, post]
                     corpus_writer('4chan', post_data)
