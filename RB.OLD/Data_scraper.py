@@ -25,7 +25,7 @@ def reddit_spybot(sub, datalist):
                 if post.id in reddit_post_ids:
                     post_not_present = False
                 elif post_not_present == True:
-                    #print 'Adding a post...'   
+                    #print 'Adding a post...'
                     postline = [post.id, '3-25-16', 'reddit', sub, 'Post', post.selftext]
                     datalist.append(postline)
                     reddit_post_ids.append(post.id)
@@ -42,7 +42,7 @@ def reddit_spybot(sub, datalist):
                 time.sleep(5)
                 continue
         break
-            
+
     return datalist
 
 def chan_spybot(board, datalist):
@@ -61,7 +61,7 @@ def chan_spybot(board, datalist):
                     datalist.append(postline)
                     chan_post_ids.append(post.post_id)
     return datalist
-    
+
 chan_datalist = list()
 reddit_datalist = list()
 reddit_post_ids = list()
@@ -69,7 +69,7 @@ chan_post_ids = list()
 
 
 with open('corpus.csv', 'r+') as c:
-    datareader = csv.reader(c)    
+    datareader = csv.reader(c)
     for line in datareader:
         if line[2] == 'reddit':
             reddit_datalist.append(line)
@@ -83,11 +83,11 @@ reddit_subs = ['spacedicks','askreddit','aww','books','fitness','food','funny','
 
 for sub in reddit_subs:
     reddit_datalist = reddit_spybot(sub, reddit_datalist)
-       
+
 for board in chan_boards:
     bname = basc_py4chan.Board(board)
     chan_datalist = chan_spybot(bname, chan_datalist)
-    
+
 
 
 full_list = reddit_datalist + chan_datalist
@@ -96,5 +96,3 @@ with open('corpus.csv', 'a+') as c:
     datawriter = csv.writer(c)
     for entry in full_list:
         datawriter.writerow(entry)
-
-
